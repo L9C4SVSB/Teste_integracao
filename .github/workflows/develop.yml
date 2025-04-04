@@ -20,7 +20,7 @@ jobs:
         run: docker compose -f docker-compose.yml up -d --build
 
       - name: Listar arquivos do diretório dentro do container
-        run: docker exec play-api ls -lah /var/www/code
+        run: docker exec play-api ls -lah /var/www/
         
       - name: Run PHPUnit with coverage
         run: |
