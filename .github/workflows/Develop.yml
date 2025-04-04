@@ -19,6 +19,10 @@ jobs:
       - name: Set up Docker
         run: docker compose -f docker-compose.yml up -d --build
 
+
+      - name: setup for directory
+        run: docker exec play-api composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Run PHPUnit with coverage
         run: |
           docker exec play-api ./vendor/bin/phpunit \
