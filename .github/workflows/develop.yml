@@ -16,12 +16,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: Listar arquivos do diretório dentro do container
-        run: docker exec play-api ls -lah /var/www/code
-        
       - name: Set up Docker
         run: docker compose -f docker-compose.yml up -d --build
 
+      - name: Listar arquivos do diretório dentro do container
+        run: docker exec play-api ls -lah /var/www/code
+        
       - name: Run PHPUnit with coverage
         run: |
           docker exec play-api vendor/bin/phpunit \
