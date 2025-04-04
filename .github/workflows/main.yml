@@ -1,0 +1,85 @@
+name: PHP Tests + Sonar + Conditional PR
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test-and-analysis:
+    runs-on: ubuntu-latest
+    outputs:
+      coverage-ok: ${{ steps.check-coverage.outputs.coverage-ok }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        run: docker compose -f docker-compose.yml up -d --build
+
+      - name: Run PHPUnit with coverage
+        run: |
+          docker exec play-api ./vendor/bin/phpunit \
+            --coverage-clover /var/www/code/coverage.xml \
+            /var/www/code/tests
+
+      - name: Copy coverage file from container
+        run: |
+          docker cp play-api:/var/www/code/coverage.xml ./coverage.xml
+
+      - name: Check coverage percentage
+        id: check-coverage
+        run: |
+          COVERAGE=$(grep -oPm1 '(?<=<metrics .*line-rate=")[^"]+' coverage.xml)
+          PERCENT=$(echo "$COVERAGE * 100" | bc -l | awk '{printf "%.2f", $0}')
+          echo "Cobertura: $PERCENT%"
+          if (( $(echo "$PERCENT >= 70" | bc -l) )); then
+            echo "✅ Cobertura OK"
+            echo "coverage-ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Cobertura insuficiente"
+            echo "coverage-ok=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run SonarQube scan
+        if: steps.check-coverage.outputs.coverage-ok == 'true'
+        uses: SonarSource/sonarqube-scan-action@v1.2
+        with:
+          projectBaseDir: ./code
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  create-pr:
+    needs: test-and-analysis
+    if: needs.test-and-analysis.outputs.coverage-ok == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create branch
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout -b feature/auto-pr
+
+      - name: Dummy change (opcional)
+        run: |
+          echo "// auto-pr trigger" >> .github/trigger.php
+          git add .github/trigger.php
+          git commit -m "chore: trigger auto PR"
+
+      - name: Push branch
+        run: git push origin feature/auto-pr
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          head: feature/auto-pr
+          title: "PR automático: cobertura ≥ 70% 🎯"
+          body: "Cobertura de testes OK e análise SonarQube finalizada com sucesso."
