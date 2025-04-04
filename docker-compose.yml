@@ -14,7 +14,9 @@ services:
       - ./code:/var/www
     networks:
       - player_test_api
-
+    command: |
+      bash -c "composer install && php-fpm"
+    
   db:
     container_name: play-db
     image: mysql:8.0
