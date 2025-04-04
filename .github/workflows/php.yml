@@ -17,6 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Listar arquivos do diretório dentro do container
+      run: docker exec play-api ls -lah /var/www/
+
     - name: Validate composer.json and composer.lock
       run: composer validate --strict --working-dir=/var/www
 
