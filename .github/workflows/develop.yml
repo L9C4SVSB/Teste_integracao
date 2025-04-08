@@ -54,17 +54,17 @@ jobs:
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      - name: Check coverage percentage
+      - name: Verificar cobertura mínima
         id: check-coverage
         run: |
-          total=$(xmllint --xpath 'string(//metrics/@statements)' coverage.xml)
-          covered=$(xmllint --xpath 'string(//metrics/@coveredstatements)' coverage.xml)
+          total=$(awk -F'"' '/<metrics .*statements="/ { print $14 }' coverage.xml | tail -1)
+          covered=$(awk -F'"' '/<metrics .*coveredstatements="/ { print $16 }' coverage.xml | tail -1)
 
-          echo "Total statements: $total"
-          echo "Covered statements: $covered"
+          echo "Total de statements: $total"
+          echo "Statements cobertos: $covered"
 
           coverage_percent=$(awk "BEGIN {printf \"%.2f\", ($covered / $total) * 100}")
-          echo "Cobertura total: $coverage_percent%"
+          echo "Cobertura: $coverage_percent%"
 
           echo "coverage_percent=$coverage_percent" >> $GITHUB_OUTPUT
 
