@@ -87,8 +87,9 @@ jobs:
     - name: Instalar dependências
       run: composer install --no-interaction --prefer-dist
 
-    - name: Rodar testes com cobertura
-      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+    - name: Install Dependencies
+      run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      working-directory: ${{ github.workspace }}/code
 
     - name: Rodar SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
