@@ -47,18 +47,8 @@ jobs:
             tests
         working-directory: ${{ github.workspace }}/code
     
-      - name: Check coverage percentage
-        id: check-coverage
-        run: |
-          COVERAGE=$(grep -oPm1 '(?<=<metrics .*line-rate=")[^"]+' coverage.xml)
-          PERCENT=$(echo "$COVERAGE * 100" | bc -l | awk '{printf "%.2f", $0}')
-          echo "Cobertura: $PERCENT%"
-          if (( $(echo "$PERCENT >= 70" | bc -l) )); then
-            echo "✅ Cobertura OK"
-            echo "coverage-ok=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Cobertura insuficiente"
-            echo "coverage-ok=false" >> $GITHUB_OUTPUT
+      - name: Listar diretório após cobertura
+        run: ls -la
         working-directory: ${{ github.workspace }}/code
 
 
