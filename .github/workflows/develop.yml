@@ -79,7 +79,7 @@ jobs:
         if: steps.check-coverage.outputs.coverage-ok == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GIT_TOKEN }}
           base: main
           branch: develop
           title: "Merge develop into main - cobertura ≥ 70%"
