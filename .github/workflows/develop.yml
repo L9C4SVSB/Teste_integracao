@@ -84,9 +84,6 @@ jobs:
       with:
         php-version: '8.2' # ou a versão que seu projeto usa
 
-    - name: Instalar dependências
-      run: composer install --no-interaction --prefer-dist
-
     - name: Install Dependencies
       run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       working-directory: ${{ github.workspace }}/code
