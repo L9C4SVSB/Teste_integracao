@@ -74,20 +74,31 @@ jobs:
             echo "coverage-ok=false" >> $GITHUB_OUTPUT
           fi
         working-directory: ${{ github.workspace }}/code
-      
-      - name: Criar Pull Request para main
-        if: steps.check-coverage.outputs.coverage-ok == 'true'
+
+  create-pr:
+    needs: unit-tests
+    if: needs.check-coverage.outputs.coverage-ok == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Obter nome da branch de origem
+        id: vars
+        run: echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - name: Criar Pull Request para develop
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GIT_TOKEN }}
-          base: main
-          branch: develop
-          title: "Merge develop into main - cobertura ≥ 70%"
+          commit-message: "Cobertura de testes ≥ 70% - PR automático"
+          branch: auto/coverage-pass
+          base: develop
+          title: "Cobertura OK: PR automático para develop"
           body: |
-            🚀 A cobertura de testes atingiu **${{ steps.check-coverage.outputs.coverage_percent }}%**.
-            Este PR foi gerado automaticamente porque atingiu o mínimo de 70%.
-          draft: false
-      
+            A cobertura de testes atingiu **${{ needs.check-coverage.outputs.coverage-percent }}%**, superando o mínimo de 70%.
+            Este PR foi criado automaticamente para promover as mudanças da branch `${{ steps.vars.outputs.branch_name }}` para `develop`.
+
           
 
 
