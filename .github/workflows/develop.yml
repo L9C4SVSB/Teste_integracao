@@ -90,7 +90,7 @@ jobs:
       uses: sonarsource/sonarcloud-github-action@master
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: 5272052976a501d0b9dd6fa134e217d1b9c6b827
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT: L9C4SVSB_Teste_integracao
           SONAR_ORGANIZATION: l9c4svsb
 
