@@ -13,18 +13,32 @@ jobs:
       coverage-ok: ${{ steps.check-coverage.outputs.coverage-ok }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         
-      - name: Set up Docker
-        run: docker compose -f docker-compose.yml up -d --build
+      - name: Diretorio APP
+        run: echo "Working directory is ${{ github.workspace }}"
 
-      - name: Listar arquivos do diretório dentro do container
-        run: docker exec play-api ls -lah /var/www/
+      - name: SETANDO PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
 
-      - name: Install PHP dependencies via Composer
-        run: docker exec play-api composer install --no-dev --optimize-autoloader --working-dir=/var/www
+      - name: Copy .env
+        run: php -r "file_exists('${{ github.workspace }}/code/.env') || copy('${{ github.workspace }}/code/.env.example', '${{ github.workspace }}/code/.env');"
+    
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+        working-directory: ${{ github.workspace }}/code
         
+      - name: Generate key
+        run: php artisan key:generate
+        working-directory: ${{ github.workspace }}/code
+          
+      - name: Directory Permissions
+        run: chmod -R 777 storage bootstrap/cache
+        working-directory: ${{ github.workspace }}/code
+
       - name: Run PHPUnit with coverage
         run: |
           docker exec play-api vendor/bin/phpunit \
