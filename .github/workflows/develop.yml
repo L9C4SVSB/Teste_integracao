@@ -57,8 +57,8 @@ jobs:
       - name: Verificar cobertura mínima
         id: check-coverage
         run: |
-          total=$(awk -F'"' '/<metrics .*statements="/ { print $14 }' coverage.xml | tail -1)
-          covered=$(awk -F'"' '/<metrics .*coveredstatements="/ { print $16 }' coverage.xml | tail -1)
+          total=$(awk -F'"' '/<metrics .*statements="/ { print $18 }' coverage.xml | tail -1)
+          covered=$(awk -F'"' '/<metrics .*coveredstatements="/ { print $24 }' coverage.xml | tail -1)
 
           echo "Total de statements: $total"
           echo "Statements cobertos: $covered"
