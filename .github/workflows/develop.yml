@@ -67,6 +67,41 @@ jobs:
             echo "coverage-ok=false" >> $GITHUB_OUTPUT
           fi
         working-directory: ${{ github.workspace }}/code
+  
+  SonarCloudScan:
+    needs: unit-tests
+    if: needs.unit-tests.outputs.coverage-ok == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código da branch atual
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # necessário para o Sonar comparar branches
+
+    - name: Setup PHP (ou outro setup necessário)
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2' # ou a versão que seu projeto usa
+
+    - name: Instalar dependências
+      run: composer install --no-interaction --prefer-dist
+
+    - name: Rodar testes com cobertura
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+    - name: Rodar SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v2
+      with:
+        args: >
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.php.coverage.reportPaths=coverage.xml
+          -Dsonar.pullrequest.branch=${{ github.head_ref }}
+          -Dsonar.pullrequest.base=${{ github.base_ref }}
+
 
   create-pr:
     needs: unit-tests
