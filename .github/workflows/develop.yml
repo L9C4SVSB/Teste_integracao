@@ -46,13 +46,6 @@ jobs:
             --coverage-clover coverage.xml \
             tests
         working-directory: ${{ github.workspace }}/code
-    
-      - name: Listar diretório após cobertura
-        run: ls -la
-        working-directory: ${{ github.workspace }}/code
-      
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
       - name: Verificar cobertura mínima
         id: check-coverage
@@ -77,7 +70,7 @@ jobs:
 
   create-pr:
     needs: unit-tests
-    if: needs.check-coverage.outputs.coverage-ok == 'true'
+    if: needs.unit-tests.outputs.coverage-ok == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -96,7 +89,7 @@ jobs:
           base: develop
           title: "Cobertura OK: PR automático para develop"
           body: |
-            A cobertura de testes atingiu **${{ needs.check-coverage.outputs.coverage-percent }}%**, superando o mínimo de 70%.
+            A cobertura de testes atingiu **${{ needs.unit-tests.outputs.coverage_percent }}%**, superando o mínimo de 70%.
             Este PR foi criado automaticamente para promover as mudanças da branch `${{ steps.vars.outputs.branch_name }}` para `develop`.
 
           
