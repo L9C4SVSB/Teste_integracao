@@ -1,12 +1,14 @@
 name: PHP CI with Coverage and PR
 
 on:
-  push:
+  pull_request:
     branches:
       - develop
 
 jobs:
+
   unit-tests:
+    
     name: Run Unit Tests with Coverage
     runs-on: ubuntu-latest
     outputs:
@@ -62,31 +64,11 @@ jobs:
           echo "coverage_percent=$coverage_percent" >> $GITHUB_OUTPUT
 
           if (( $(echo "$coverage_percent >= 70.0" | bc -l) )); then
-            echo "coverage-ok=true" >> $GITHUB_OUTPUT
+            echo "Cobertura insuficiente: $coverage_percent%"
+            exit 1
           else
             echo "coverage-ok=false" >> $GITHUB_OUTPUT
           fi
         working-directory: ${{ github.workspace }}/code
-  create-pr:
-    needs: unit-tests
-    if: needs.unit-tests.outputs.coverage-ok == 'true'
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v3
-
-      - name: Obter nome da branch de origem
-        id: vars
-        run: echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
-
-      - name: Criar Pull Request para develop
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: "Cobertura de testes ≥ 70% - PR automático"
-          branch: auto/coverage-pass
-          base: develop
-          title: "Cobertura OK: PR automático para develop"
-          body: |
-            A cobertura de testes atingiu **${{ needs.unit-tests.outputs.coverage_percent }}%**, superando o mínimo de 70%.
-            Este PR foi criado automaticamente para promover as mudanças da branch `${{ steps.vars.outputs.branch_name }}` para `develop`.
+  
