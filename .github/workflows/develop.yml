@@ -10,7 +10,7 @@ jobs:
   unit-tests:
     
     name: Run Unit Tests with Coverage
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       coverage-ok: ${{ steps.check-coverage.outputs.coverage-ok }}
 
