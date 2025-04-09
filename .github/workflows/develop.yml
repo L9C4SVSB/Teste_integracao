@@ -67,34 +67,6 @@ jobs:
             echo "coverage-ok=false" >> $GITHUB_OUTPUT
           fi
         working-directory: ${{ github.workspace }}/code
-  
-  SonarCloudScan:
-    needs: unit-tests
-    if: needs.unit-tests.outputs.coverage-ok == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout código da branch atual
-      uses: actions/checkout@v3
-
-    - name: Setup PHP (ou outro setup necessário)
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2' # ou a versão que seu projeto usa
-
-    - name: Install Dependencies
-      run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-      working-directory: ${{ github.workspace }}/code
-
-    - name: Rodar SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v5.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
-
-
-
   create-pr:
     needs: unit-tests
     if: needs.unit-tests.outputs.coverage-ok == 'true'
@@ -118,8 +90,3 @@ jobs:
           body: |
             A cobertura de testes atingiu **${{ needs.unit-tests.outputs.coverage_percent }}%**, superando o mínimo de 70%.
             Este PR foi criado automaticamente para promover as mudanças da branch `${{ steps.vars.outputs.branch_name }}` para `develop`.
-
-          
-
-
-
