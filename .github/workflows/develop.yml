@@ -63,11 +63,11 @@ jobs:
 
           echo "coverage_percent=$coverage_percent" >> $GITHUB_OUTPUT
 
-          if (( $(echo "$coverage_percent >= 70.0" | bc -l) )); then
+          if (( $(echo "$coverage_percent < 70.0" | bc -l) )); then
             echo "Cobertura insuficiente: $coverage_percent%"
             exit 1
           else
-            echo "coverage-ok=false" >> $GITHUB_OUTPUT
+            echo "Cobertura ok: $coverage_percent%"
           fi
         working-directory: ${{ github.workspace }}/code
 
