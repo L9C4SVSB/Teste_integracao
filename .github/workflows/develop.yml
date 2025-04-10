@@ -70,5 +70,3 @@ jobs:
             echo "Cobertura ok: $coverage_percent%"
           fi
         working-directory: ${{ github.workspace }}/code
-
-  
