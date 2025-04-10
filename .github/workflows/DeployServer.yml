@@ -12,13 +12,38 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Mostrar diretório atual
-        run: pwd
-
-      - name: Listar arquivos
-        run: ls -la
-
-      - name: Mostrar variáveis de ambiente
+      - name: Definir variáveis
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "HOME: $HOME"
+          export DEPLOY_DIR=/home/lsantos/projetos/Portal_clientes
+          export BACKUP_DIR=/home/lsantos/projetos/backup_$(date +%Y%m%d_%H%M%S)
+          echo "DEPLOY_DIR=$DEPLOY_DIR" >> $GITHUB_ENV
+          echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
+
+      - name: Criar diretório de deploy se não existir
+        run: |
+          if [ ! -d "$DEPLOY_DIR" ]; then
+            echo "Diretório de deploy não existe. Criando..."
+            mkdir -p "$DEPLOY_DIR"
+          else
+            echo "Diretório de deploy já existe."
+          fi
+      
+      - name: Criar backup do deploy atual
+        run: |
+          echo "Fazendo backup atual em: $BACKUP_DIR"
+          cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
+
+      - name: Atualizar somente arquivos do commit (deploy incremental)
+        run: |
+          echo "Atualizando arquivos modificados..."
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+
+          for file in $CHANGED_FILES; do
+            src="$PWD/$file"
+            dest="$DEPLOY_DIR/$file"
+            dest_dir=$(dirname "$dest")
+
+            mkdir -p "$dest_dir"
+            cp "$src" "$dest"
+            echo "Atualizado: $file"
+          done
