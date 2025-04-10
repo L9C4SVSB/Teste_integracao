@@ -20,47 +20,45 @@ jobs:
           export BACKUP_DIR=/home/lsantos/projetos/backup_$(date +%Y%m%d_%H%M%S)
           echo "DEPLOY_DIR=$DEPLOY_DIR" >> $GITHUB_ENV
           echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
-
-      - name: Criar diretório de deploy se não existir
-        run: |
-          if [ ! -d "$DEPLOY_DIR" ]; then
-            echo "Diretório de deploy não existe. Criando..."
-            mkdir -p "$DEPLOY_DIR"
-          else
-            echo "Diretório de deploy já existe."
-          fi
-      
-      - name: Criar backup do deploy atual
-        run: |
-          echo "Fazendo backup atual em: $BACKUP_DIR"
-          cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
-
-      - name: Atualizar arquivos do merge (deploy incremental)
-        run: |
-          echo "Atualizando arquivos modificados..."
-    
-          # Arquivos adicionados ou modificados
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=AM ${{ github.sha }})
-      
-          for file in $CHANGED_FILES; do
-            src="$PWD/$file"
-            dest="$DEPLOY_DIR/$file"
-            dest_dir=$(dirname "$dest")
-      
-            mkdir -p "$dest_dir"
-            cp "$src" "$dest"
-            echo "Atualizado: $file"
-          done
-      
-          echo "Removendo arquivos deletados..."
           
-          # Arquivos deletados
-          DELETED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=D ${{ github.sha }})
+      - name: Atualizar arquivos do merge (deploy incremental ou total)
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          if [ -d "${{ env.DEPLOY_DIR }}" ]; then
+            # Diretório existe → backup + incremental
+            BACKUP_DIR="${{ env.DEPLOY_DIR }}_backup_${TIMESTAMP}"
+            echo "Diretório de deploy existe. Fazendo backup em: $BACKUP_DIR"
+            cp -r "${{ env.DEPLOY_DIR }}" "$BACKUP_DIR"
+            echo "Backup concluído."
       
-          for file in $DELETED_FILES; do
-            target="$DEPLOY_DIR/$file"
-            if [ -f "$target" ]; then
-              rm "$target"
-              echo "Removido: $file"
-            fi
-          done
+            echo "Atualizando arquivos modificados (deploy incremental)..."
+            # Arquivos adicionados ou modificados
+            CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=AM ${{ github.sha }})
+            for file in $CHANGED_FILES; do
+              src="$PWD/$file"
+              dest="${{ env.DEPLOY_DIR }}/$file"
+              dest_dir=$(dirname "$dest")
+              mkdir -p "$dest_dir"
+              cp "$src" "$dest"
+              echo "Atualizado: $file"
+            done
+      
+            echo "Removendo arquivos deletados..."
+            # Arquivos deletados
+            DELETED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=D ${{ github.sha }})
+            for file in $DELETED_FILES; do
+              target="${{ env.DEPLOY_DIR }}/$file"
+              if [ -f "$target" ]; then
+                rm "$target"
+                echo "Removido: $file"
+              fi
+            done
+      
+          else
+            # Diretório não existe → deploy completo
+            echo "Diretório de deploy não existe. Fazendo deploy completo..."
+            mkdir -p "${{ env.DEPLOY_DIR }}"
+            cp -r . "${{ env.DEPLOY_DIR }}"
+            echo "Deploy completo realizado."
+          fi
+
