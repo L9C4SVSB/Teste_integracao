@@ -12,38 +12,13 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Configurar variáveis
-        run: |
-          export PROJECT_DIR="/var/www/seu-projeto"
-          export BACKUP_DIR="/backups"
-          export TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          export BACKUP_FILE="$BACKUP_DIR/projeto-backup-$TIMESTAMP.tar.gz"
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-          echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
+      - name: Mostrar diretório atual
+        run: pwd
 
-      - name: Criar backup do sistema atual
-        run: |
-          mkdir -p "$BACKUP_DIR"
-          tar -czf "$BACKUP_FILE" -C "$PROJECT_DIR" .
-          echo "Backup criado em $BACKUP_FILE"
+      - name: Listar arquivos
+        run: ls -la
 
-      - name: Descobrir arquivos alterados
-        id: changed
+      - name: Mostrar variáveis de ambiente
         run: |
-          git fetch origin
-          # Comparar o commit anterior com o atual
-          export DIFF_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          echo "files=$DIFF_FILES" >> $GITHUB_OUTPUT
-          echo "Arquivos alterados:"
-          echo "$DIFF_FILES"
-
-      - name: Fazer deploy apenas dos arquivos alterados
-        run: |
-          for file in ${{ steps.changed.outputs.files }}; do
-            echo "Copiando $file para $PROJECT_DIR/$file"
-            mkdir -p "$(dirname "$PROJECT_DIR/$file")"
-            cp "$file" "$PROJECT_DIR/$file"
-          done
-
-      - name: Finalizado
-        run: echo "Deploy completo com sucesso!"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "HOME: $HOME"
