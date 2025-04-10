@@ -12,6 +12,7 @@ jobs:
     outputs:
       coverage-ok: ${{ steps.check-coverage.outputs.coverage-ok }}
 
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
