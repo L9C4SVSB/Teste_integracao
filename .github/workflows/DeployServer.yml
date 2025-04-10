@@ -35,18 +35,32 @@ jobs:
           echo "Fazendo backup atual em: $BACKUP_DIR"
           cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
 
-      - name: Atualizar somente arquivos do commit (deploy incremental)
+      - name: Atualizar arquivos do merge (deploy incremental)
         run: |
           echo "Atualizando arquivos modificados..."
-
-          CHANGED_FILES=$(git diff --name-only origin/develop...HEAD)
-
+    
+          # Arquivos adicionados ou modificados
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=AM ${{ github.sha }})
+      
           for file in $CHANGED_FILES; do
             src="$PWD/$file"
             dest="$DEPLOY_DIR/$file"
             dest_dir=$(dirname "$dest")
-
+      
             mkdir -p "$dest_dir"
             cp "$src" "$dest"
             echo "Atualizado: $file"
+          done
+      
+          echo "Removendo arquivos deletados..."
+          
+          # Arquivos deletados
+          DELETED_FILES=$(git diff-tree --no-commit-id --name-only -r --diff-filter=D ${{ github.sha }})
+      
+          for file in $DELETED_FILES; do
+            target="$DEPLOY_DIR/$file"
+            if [ -f "$target" ]; then
+              rm "$target"
+              echo "Removido: $file"
+            fi
           done
